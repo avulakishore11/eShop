@@ -5,7 +5,9 @@
   "directories": {
     "test": "tests"
   },
-  "scripts": {},
+  "scripts": {
+    "build": "echo 'Placeholder build script - no action required for Node.js'"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
