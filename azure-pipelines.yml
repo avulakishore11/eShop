@@ -1,37 +1,50 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
 - main
 
 pool:
-  name: 'webgoat-agent'
+  name:  'webgoat-agent'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  artifactName: 'drop'
 
 steps:
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: '8.0.200'
-- task: NodeTool@0
+    version: '8.0.x' # Use the latest 8.0.x version available
+
+- script: dotnet --version
+  displayName: 'Check .NET SDK Version'
+
+- task: NuGetToolInstaller@1
+
+- task: NuGetCommand@2
   inputs:
-    versionSpec: '16.x'
-  displayName: 'Install Node.js'
+    restoreSolution: '$(solution)'
 
 - script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+    echo "Restoring .NET packages..."
+    dotnet restore
+  displayName: 'Restore .NET Packages'
 
 - task: DotNetCoreCLI@2
   inputs:
-    command: 'publish'
-    publishWebProjects: true
-    arguments: '--configuration $(buildconfiguration) --output $(Build.ArtifactStagingDirectory)'
+    command: 'build'
+    projects: '$(solution)'
+    arguments: '--configuration $(buildConfiguration)'
+  displayName: 'Build .NET Project'
+
+- script: |
+    echo "Publishing .NET project..."
+    dotnet publish $(solution) --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+  displayName: 'Publish .NET Project'
 
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)'
-    artifact: 'eommerce-artifact'
+    artifact: '$(artifactName)'
     publishLocation: 'pipeline'
+
