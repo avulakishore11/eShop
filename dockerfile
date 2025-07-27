@@ -3,9 +3,12 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 COPY . .
-WORKDIR /src/src/ApiGateways/Web.Bff.Yarp
 
-RUN dotnet restore
+# 🔧 Only restore the specific project, not the full solution
+RUN dotnet restore src/ApiGateways/Web.Bff.Yarp/Web.Bff.Yarp.csproj
+
+# Publish the YARP gateway
+WORKDIR /src/src/ApiGateways/Web.Bff.Yarp
 RUN dotnet publish -c Release -o /app/publish
 
 # Runtime stage
