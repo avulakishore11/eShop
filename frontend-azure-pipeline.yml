@@ -36,7 +36,7 @@ stages:
               zipAfterPublish: true
 
           - publish: '$(Build.ArtifactStagingDirectory)'
-            artifact: webapp-drop
+            artifact: webapp-drop # artifact name
 
   - stage: DeployToDev
     dependsOn: Build
