@@ -17,7 +17,8 @@ variables:
 stages:
   - stage: Build
     jobs:
-      - job: BuildWebApp
+      - job: BuildFrontend
+        displayName: 'Build Frontend'
         steps:
           - task: DotNetCoreCLI@2
             displayName: 'Restore'
@@ -50,7 +51,7 @@ stages:
                 - task: AzureWebApp@1
                   displayName: 'Deploy to App Service (dev)'
                   inputs:
-                    azureSubscription: '<your-service-connection-name>'
+                    azureSubscription: 'ado-to-azure-auth/authz'
                     appType: 'webApp'
                     appName: 'kaseyaeshop'
                     package: '$(Pipeline.Workspace)/webapp-drop/**/*.zip'
