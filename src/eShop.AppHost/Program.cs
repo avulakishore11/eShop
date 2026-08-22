@@ -6,8 +6,7 @@ builder.AddForwardedHeaders();
 builder.AddAzureContainerAppEnvironment("aca");
 
 var redis = builder.AddRedis("redis");
-var serviceBus = builder.AddAzureServiceBus("eventbus")
-    .RunAsEmulator(emulator => emulator.WithLifetime(ContainerLifetime.Persistent));
+var serviceBus = builder.AddAzureServiceBus("eventbus");
 var eventBusTopic = serviceBus.AddServiceBusTopic("eshop-event-bus");
 eventBusTopic.AddServiceBusSubscription("Basket");
 eventBusTopic.AddServiceBusSubscription("Catalog");

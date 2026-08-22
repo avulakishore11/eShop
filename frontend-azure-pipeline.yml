@@ -1,9 +1,56 @@
-- task: DotNetCoreCLI@2
-  inputs:
-    command: publish
-    projects: 'src/WebApp/WebApp.csproj'
-    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'- task: AzureWebApp@1
-  inputs:
-    azureSubscription: '<your service connection name>'
-    appName: '<your app service name>'
-    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/WebApp/*
+      - src/WebAppComponents/*
+      - src/ServiceDefaults/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildWebApp
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore'
+            inputs:
+              command: restore
+              projects: 'src/WebApp/WebApp.csproj'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Publish'
+            inputs:
+              command: publish
+              projects: 'src/WebApp/WebApp.csproj'
+              publishWebProjects: false
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+              zipAfterPublish: true
+
+          - publish: '$(Build.ArtifactStagingDirectory)'
+            artifact: webapp-drop
+
+  - stage: DeployToDev
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployWebApp
+        environment: 'eshop-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to App Service (dev)'
+                  inputs:
+                    azureSubscription: '<your-service-connection-name>'
+                    appType: 'webApp'
+                    appName: 'kaseyaeshop'
+                    package: '$(Pipeline.Workspace)/webapp-drop/**/*.zip'
