@@ -15,13 +15,11 @@
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Foundry" Version="$(AspireUnstablePackagesVersion)" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.ServiceBus" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Redis" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Yarp" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Npgsql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.RabbitMQ.Client" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Azure.Messaging.ServiceBus" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.StackExchange.Redis" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Azure.AI.OpenAI" Version="$(AspireUnstablePackagesVersion)" />
