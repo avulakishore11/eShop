@@ -6,8 +6,16 @@ builder.AddForwardedHeaders();
 builder.AddAzureContainerAppEnvironment("aca");
 
 var redis = builder.AddRedis("redis");
-var rabbitMq = builder.AddRabbitMQ("eventbus")
-    .WithLifetime(ContainerLifetime.Persistent);
+var serviceBus = builder.AddAzureServiceBus("eventbus")
+    .RunAsEmulator(emulator => emulator.WithLifetime(ContainerLifetime.Persistent));
+var eventBusTopic = serviceBus.AddServiceBusTopic("eshop-event-bus");
+eventBusTopic.AddServiceBusSubscription("Basket");
+eventBusTopic.AddServiceBusSubscription("Catalog");
+eventBusTopic.AddServiceBusSubscription("Ordering");
+eventBusTopic.AddServiceBusSubscription("OrderProcessor");
+eventBusTopic.AddServiceBusSubscription("PaymentProcessor");
+eventBusTopic.AddServiceBusSubscription("Ordering.webapp");
+eventBusTopic.AddServiceBusSubscription("Webhooks");
 var postgres = builder.AddPostgres("postgres")
     .WithImage("ankane/pgvector")
     .WithImageTag("latest")
@@ -30,30 +38,30 @@ var identityEndpoint = identityApi.GetEndpoint(launchProfileName);
 
 var basketApi = builder.AddProject<Projects.Basket_API>("basket-api")
     .WithReference(redis)
-    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithReference(serviceBus).WaitFor(serviceBus)
     .WithEnvironment("Identity__Url", identityEndpoint);
 redis.WithParentRelationship(basketApi);
 
 var catalogApi = builder.AddProject<Projects.Catalog_API>("catalog-api")
-    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithReference(serviceBus).WaitFor(serviceBus)
     .WithReference(catalogDb);
 
 var orderingApi = builder.AddProject<Projects.Ordering_API>("ordering-api")
-    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithReference(serviceBus).WaitFor(serviceBus)
     .WithReference(orderDb).WaitFor(orderDb)
     .WithHttpHealthCheck("/health")
     .WithEnvironment("Identity__Url", identityEndpoint);
 
 builder.AddProject<Projects.OrderProcessor>("order-processor")
-    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithReference(serviceBus).WaitFor(serviceBus)
     .WithReference(orderDb)
     .WaitFor(orderingApi); // wait for the orderingApi to be ready because that contains the EF migrations
 
 builder.AddProject<Projects.PaymentProcessor>("payment-processor")
-    .WithReference(rabbitMq).WaitFor(rabbitMq);
+    .WithReference(serviceBus).WaitFor(serviceBus);
 
 var webHooksApi = builder.AddProject<Projects.Webhooks_API>("webhooks-api")
-    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithReference(serviceBus).WaitFor(serviceBus)
     .WithReference(webhooksDb)
     .WithEnvironment("Identity__Url", identityEndpoint);
 
@@ -73,7 +81,7 @@ var webApp = builder.AddProject<Projects.WebApp>("webapp", launchProfileName)
     .WithReference(basketApi)
     .WithReference(catalogApi)
     .WithReference(orderingApi)
-    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithReference(serviceBus).WaitFor(serviceBus)
     .WaitFor(identityApi)
     .WithEnvironment("IdentityUrl", identityEndpoint);
 

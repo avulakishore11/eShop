@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>eShop.EventBusRabbitMQ</RootNamespace>
+    <RootNamespace>eShop.EventBusServiceBus</RootNamespace>
     <IsAotCompatible>true</IsAotCompatible>
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
   </PropertyGroup>
@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.RabbitMQ.Client" />
+    <PackageReference Include="Aspire.Azure.Messaging.ServiceBus" />
   </ItemGroup>
 
   <ItemGroup>

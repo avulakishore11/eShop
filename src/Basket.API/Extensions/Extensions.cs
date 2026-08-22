@@ -15,7 +15,7 @@ public static class Extensions
 
         builder.Services.AddSingleton<IBasketRepository, RedisBasketRepository>();
 
-        builder.AddRabbitMqEventBus("eventbus")
+        builder.AddServiceBusEventBus("eventbus")
                .AddSubscription<OrderStartedIntegrationEvent, OrderStartedIntegrationEventHandler>()
                .ConfigureJsonOptions(options => options.TypeInfoResolverChain.Add(IntegrationEventContext.Default));
     }

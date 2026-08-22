@@ -25,7 +25,7 @@ internal static class Extensions
 
         services.AddTransient<IOrderingIntegrationEventService, OrderingIntegrationEventService>();
 
-        builder.AddRabbitMqEventBus("eventbus")
+        builder.AddServiceBusEventBus("eventbus")
                .AddEventBusSubscriptions();
 
         services.AddHttpContextAccessor();

@@ -5,7 +5,7 @@
     <Project Path="src/Catalog.API/Catalog.API.csproj" />
     <Project Path="src/eShop.ServiceDefaults/eShop.ServiceDefaults.csproj" />
     <Project Path="src/EventBus/EventBus.csproj" />
-    <Project Path="src/EventBusRabbitMQ/EventBusRabbitMQ.csproj" />
+    <Project Path="src/EventBusServiceBus/EventBusServiceBus.csproj" />
     <Project Path="src/Identity.API/Identity.API.csproj" />
     <Project Path="src/IntegrationEventLogEF/IntegrationEventLogEF.csproj" />
     <Project Path="src/Ordering.API/Ordering.API.csproj" />

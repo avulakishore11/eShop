@@ -1,0 +1,9 @@
+- task: DotNetCoreCLI@2
+  inputs:
+    command: publish
+    projects: 'src/WebApp/WebApp.csproj'
+    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'- task: AzureWebApp@1
+  inputs:
+    azureSubscription: '<your service connection name>'
+    appName: '<your app service name>'
+    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'

@@ -9,9 +9,9 @@ public sealed class WebhooksApiFixture : WebApplicationFactory<Program>, IAsyncL
 {
     private readonly IHost _app;
     private readonly IResourceBuilder<PostgresServerResource> _database;
-    private readonly IResourceBuilder<RabbitMQServerResource> _rabbitMq;
+    private readonly IResourceBuilder<AzureServiceBusResource> _serviceBus;
     private string _databaseConnectionString = null!;
-    private string _rabbitMqConnectionString = null!;
+    private string _serviceBusConnectionString = null!;
 
     public WebhooksApiFixture()
     {
@@ -22,7 +22,10 @@ public sealed class WebhooksApiFixture : WebApplicationFactory<Program>, IAsyncL
         };
         var appBuilder = DistributedApplication.CreateBuilder(options);
         _database = appBuilder.AddPostgres("webhooksdb");
-        _rabbitMq = appBuilder.AddRabbitMQ("eventbus");
+        _serviceBus = appBuilder.AddAzureServiceBus("eventbus")
+            .RunAsEmulator();
+        _serviceBus.AddServiceBusTopic("eshop-event-bus")
+            .AddServiceBusSubscription("Webhooks");
         _app = appBuilder.Build();
     }
 
@@ -33,7 +36,7 @@ public sealed class WebhooksApiFixture : WebApplicationFactory<Program>, IAsyncL
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [$"ConnectionStrings:{_database.Resource.Name}"] = _databaseConnectionString,
-                [$"ConnectionStrings:{_rabbitMq.Resource.Name}"] = _rabbitMqConnectionString,
+                [$"ConnectionStrings:{_serviceBus.Resource.Name}"] = _serviceBusConnectionString,
                 ["Identity:Url"] = "http://identity.test"
             });
         });
@@ -50,7 +53,7 @@ public sealed class WebhooksApiFixture : WebApplicationFactory<Program>, IAsyncL
     {
         await _app.StartAsync();
         _databaseConnectionString = (await _database.Resource.GetConnectionStringAsync())!;
-        _rabbitMqConnectionString = (await _rabbitMq.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None))!;
+        _serviceBusConnectionString = (await _serviceBus.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None))!;
     }
 
     public override async ValueTask DisposeAsync()

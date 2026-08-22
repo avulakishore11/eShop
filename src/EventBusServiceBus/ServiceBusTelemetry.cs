@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using OpenTelemetry.Context.Propagation;
 
-namespace eShop.EventBusRabbitMQ;
+namespace eShop.EventBusServiceBus;
 
-public class RabbitMQTelemetry
+public class ServiceBusTelemetry
 {
-    public static string ActivitySourceName = "EventBusRabbitMQ";
+    public static string ActivitySourceName = "EventBusServiceBus";
 
     public ActivitySource ActivitySource { get; } = new(ActivitySourceName);
     public TextMapPropagator Propagator { get; } = Propagators.DefaultTextMapPropagator;
