@@ -14,7 +14,7 @@ public static class Extensions
 
         builder.AddNpgsqlDbContext<CatalogContext>("catalogdb", configureDbContextOptions: dbContextOptionsBuilder =>
         {
-            dbContextOptionsBuilder.UseNpgsql(builder =>
+            dbContextOptionsBuilder.UseSQLServer(builder =>
             {
                 builder.UseVector();
             });
