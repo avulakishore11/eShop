@@ -40,13 +40,13 @@ stages:
             #  publishTestResults: false
            # continueOnError: false
 
-          - task: PublishTestResults@2
-            displayName: 'Publish test results'
-            condition: succeededOrFailed()
-            inputs:
-              testResultsFormat: 'VSTest'
-              testResultsFiles: '**/catalog-tests.trx'
-              searchFolder: 'tests/Catalog.FunctionalTests'
+         # - task: PublishTestResults@2
+          #  displayName: 'Publish test results'
+           # condition: succeededOrFailed()
+            #inputs:
+             # testResultsFormat: 'VSTest'
+              #testResultsFiles: '**/catalog-tests.trx'
+             # searchFolder: 'tests/Catalog.FunctionalTests'
 
           - task: AzureCLI@2
             displayName: 'Build image from Dockerfile and push to ACR'
