@@ -6,6 +6,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
 
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace eShop.Catalog.FunctionalTests;
@@ -79,5 +80,25 @@ public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLi
         }
 
         _serviceBusConnectionString = await ServiceBus.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
+
+        await WaitForSqlServerReadyAsync(_sqlConnectionString);
+    }
+
+    private static async Task WaitForSqlServerReadyAsync(string connectionString)
+    {
+        const int maxAttempts = 30;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync(CancellationToken.None);
+                return;
+            }
+            catch (SqlException) when (attempt < maxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2), CancellationToken.None);
+            }
+        }
     }
 }
