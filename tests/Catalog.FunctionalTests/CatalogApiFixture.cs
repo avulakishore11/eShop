@@ -14,6 +14,7 @@ public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLi
 {
     private readonly IHost _app;
 
+    public IResourceBuilder<SqlServerServerResource> SqlServer { get; private set; }
     public IResourceBuilder<SqlServerDatabaseResource> Sql { get; private set; }
     public IResourceBuilder<AzureServiceBusResource> ServiceBus { get; private set; }
     private string _sqlConnectionString;
@@ -24,8 +25,8 @@ public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLi
         var options = new DistributedApplicationOptions { AssemblyName = typeof(CatalogApiFixture).Assembly.FullName, DisableDashboard = true };
         var appBuilder = DistributedApplication.CreateBuilder(options);
 
-        Sql = appBuilder.AddSqlServer("sql")
-            .AddDatabase("CatalogDB");
+        SqlServer = appBuilder.AddSqlServer("sql");
+        Sql = SqlServer.AddDatabase("CatalogDB");
 
         var serviceBus = appBuilder.AddAzureServiceBus("eventbus")
             .RunAsEmulator();
@@ -68,8 +69,8 @@ public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLi
         await _app.StartAsync();
 
         var notificationService = _app.Services.GetRequiredService<ResourceNotificationService>();
-        await notificationService.WaitForResourceAsync(Sql.Resource.Name, KnownResourceStates.Running, CancellationToken.None);
-        await notificationService.WaitForResourceAsync(ServiceBus.Resource.Name, KnownResourceStates.Running, CancellationToken.None);
+        await notificationService.WaitForResourceHealthyAsync(SqlServer.Resource.Name, CancellationToken.None);
+        await notificationService.WaitForResourceHealthyAsync(ServiceBus.Resource.Name, CancellationToken.None);
 
         _sqlConnectionString = await Sql.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
         _serviceBusConnectionString = await ServiceBus.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
