@@ -9,7 +9,7 @@ trigger:
       - src/EventBusServiceBus/*
       - tests/Catalog.FunctionalTests/*
       - catalog-api-azure-pipeline.yml
-      - k8s/catalog-api-deployment.yaml
+      - eShop/k8s/catalog-api-deployment.yaml
       - Directory.Packages.props
 pool:
   vmImage: 'ubuntu-latest'
@@ -79,6 +79,6 @@ stages:
                     scriptLocation: inlineScript
                     inlineScript: |
                       az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing
-                      kubectl apply -f k8s/catalog-api-deployment.yaml
+                      kubectl apply -f eShop/k8s/catalog-api-deployment.yaml
                       kubectl set image deployment/catalog-api catalog-api=$(acrName).azurecr.io/$(imageName):$(Build.BuildId) -n catalog
                       kubectl rollout status deployment/catalog-api -n catalog --timeout=120s
