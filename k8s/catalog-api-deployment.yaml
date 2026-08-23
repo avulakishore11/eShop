@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-api
+  namespace: catalog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-api
+  template:
+    metadata:
+      labels:
+        app: catalog-api
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: catalog-api-sa
+      containers:
+        - name: catalog-api
+          image: acrkaseyaeshop.azurecr.io/catalog-api:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: ConnectionStrings__EventBus
+              value: "svsbus-kaseyaeShop.servicebus.windows.net"
+            - name: AZURE_CLIENT_ID
+              value: "6f73886f-0264-4c8b-808d-41ae096a4657"
+          envFrom:
+            - secretRef:
+                name: catalog-db-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-api
+  namespace: catalog
+spec:
+  type: LoadBalancer
+  selector:
+    app: catalog-api
+  ports:
+    - port: 80
+      targetPort: 8080

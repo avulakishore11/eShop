@@ -1,0 +1,75 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/Catalog.API/*
+      - src/EventBus/*
+      - src/EventBusServiceBus/*
+      - k8s/catalog-api-deployment.yaml
+      - Directory.Packages.props
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  acrName: 'acrkaseyaeshop'
+  imageName: 'catalog-api'
+  aksResourceGroup: 'rg-kaseya'
+  aksClusterName: 'kaseyaeShop-backend'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndPush
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore'
+            inputs:
+              command: restore
+              projects: 'src/Catalog.API/Catalog.API.csproj'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Test'
+            inputs:
+              command: test
+              projects: 'tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj'
+              arguments: '--configuration $(buildConfiguration)'
+            continueOnError: false
+
+          - task: AzureCLI@2
+            displayName: 'Build image from Dockerfile and push to ACR'
+            inputs:
+              azureSubscription: 'ado-to-azure-auth/authz'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az acr build \
+                  --registry $(acrName) \
+                  --image $(imageName):$(Build.BuildId) \
+                  --file src/Catalog.API/Dockerfile \
+                  .
+
+  - stage: DeployToDev
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployCatalogApi
+        environment: 'eshop-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  displayName: 'Deploy to AKS'
+                  inputs:
+                    azureSubscription: 'ado-to-azure-auth/authz'
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing
+                      kubectl apply -f k8s/catalog-api-deployment.yaml
+                      kubectl set image deployment/catalog-api catalog-api=$(acrName).azurecr.io/$(imageName):$(Build.BuildId) -n catalog
+                      kubectl rollout status deployment/catalog-api -n catalog --timeout=120s

@@ -1,13 +1,10 @@
 using System.Text.Json;
-using eShop.Catalog.API.Services;
-using Pgvector;
 
 namespace eShop.Catalog.API.Infrastructure;
 
 public partial class CatalogContextSeed(
     IWebHostEnvironment env,
     IOptions<CatalogOptions> settings,
-    ICatalogAI catalogAI,
     ILogger<CatalogContextSeed> logger) : IDbSeeder<CatalogContext>
 {
     public async Task SeedAsync(CatalogContext context)
@@ -15,10 +12,6 @@ public partial class CatalogContextSeed(
         var useCustomizationData = settings.Value.UseCustomizationData;
         var contentRootPath = env.ContentRootPath;
         var picturePath = env.WebRootPath;
-
-        // Workaround from https://github.com/npgsql/efcore.pg/issues/292#issuecomment-388608426
-        context.Database.OpenConnection();
-        ((NpgsqlConnection)context.Database.GetDbConnection()).ReloadTypes();
 
         if (!context.CatalogItems.Any())
         {
@@ -57,16 +50,6 @@ public partial class CatalogContextSeed(
                 RestockThreshold = 10,
                 PictureFileName = $"{source.Id}.webp",
             }).ToArray();
-
-            if (catalogAI.IsEnabled)
-            {
-                logger.LogInformation("Generating {NumItems} embeddings", catalogItems.Length);
-                IReadOnlyList<Vector>? embeddings = await catalogAI.GetEmbeddingsAsync(catalogItems);
-                for (int i = 0; i < catalogItems.Length; i++)
-                {
-                    catalogItems[i].Embedding = embeddings?[i];
-                }
-            }
 
             await context.CatalogItems.AddRangeAsync(catalogItems);
             logger.LogInformation("Seeded catalog with {NumItems} items", context.CatalogItems.Count());

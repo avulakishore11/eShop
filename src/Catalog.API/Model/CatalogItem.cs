@@ -1,6 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-using Pgvector;
 
 namespace eShop.Catalog.API.Model;
 
@@ -34,10 +32,6 @@ public class CatalogItem
 
     // Maximum number of units that can be in-stock at any time (due to physicial/logistical constraints in warehouses)
     public int MaxStockThreshold { get; set; }
-
-    /// <summary>Optional embedding for the catalog item's description.</summary>
-    [JsonIgnore]
-    public Vector? Embedding { get; set; }
 
     /// <summary>
     /// True if item is on reorder

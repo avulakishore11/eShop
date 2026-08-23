@@ -1,5 +1,3 @@
-﻿using eShop.Catalog.API.Services;
-
 public static class Extensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
@@ -12,13 +10,7 @@ public static class Extensions
             return;
         }
 
-        builder.AddNpgsqlDbContext<CatalogContext>("catalogdb", configureDbContextOptions: dbContextOptionsBuilder =>
-        {
-            dbContextOptionsBuilder.UseSQLServer(builder =>
-            {
-                builder.UseVector();
-            });
-        });
+        builder.AddSqlServerDbContext<CatalogContext>("CatalogDB");
 
         // REVIEW: This is done for development ease but shouldn't be here in production
         builder.Services.AddMigration<CatalogContext, CatalogContextSeed>();
@@ -34,18 +26,5 @@ public static class Extensions
 
         builder.Services.AddOptions<CatalogOptions>()
             .BindConfiguration(nameof(CatalogOptions));
-
-        if (builder.Configuration["OllamaEnabled"] is string ollamaEnabled && bool.Parse(ollamaEnabled))
-        {
-            builder.AddOllamaApiClient("embedding")
-                .AddEmbeddingGenerator();
-        }
-        else if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("textEmbeddingModel")))
-        {
-            builder.AddOpenAIClientFromConfiguration("textEmbeddingModel")
-                .AddEmbeddingGenerator();
-        }
-
-        builder.Services.AddScoped<ICatalogAI, CatalogAI>();
     }
 }
