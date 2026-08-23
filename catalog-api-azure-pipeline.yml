@@ -10,8 +10,6 @@ trigger:
       - catalog-api-azure-pipeline.yml
       - k8s/catalog-api-deployment.yaml
       - Directory.Packages.props
-      - src/ServiceDefaults/*
-
 pool:
   vmImage: 'ubuntu-latest'
 
