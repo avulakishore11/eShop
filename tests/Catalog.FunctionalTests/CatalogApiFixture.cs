@@ -73,6 +73,11 @@ public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLi
         await notificationService.WaitForResourceHealthyAsync(ServiceBus.Resource.Name, CancellationToken.None);
 
         _sqlConnectionString = await Sql.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
+        if (!_sqlConnectionString.Contains("TrustServerCertificate", StringComparison.OrdinalIgnoreCase))
+        {
+            _sqlConnectionString += ";TrustServerCertificate=true";
+        }
+
         _serviceBusConnectionString = await ServiceBus.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
     }
 }
