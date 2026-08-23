@@ -6,6 +6,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
 
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace eShop.Catalog.FunctionalTests;
 
@@ -65,6 +66,11 @@ public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLi
     public async ValueTask InitializeAsync()
     {
         await _app.StartAsync();
+
+        var notificationService = _app.Services.GetRequiredService<ResourceNotificationService>();
+        await notificationService.WaitForResourceAsync(Sql.Resource.Name, KnownResourceStates.Running, CancellationToken.None);
+        await notificationService.WaitForResourceAsync(ServiceBus.Resource.Name, KnownResourceStates.Running, CancellationToken.None);
+
         _sqlConnectionString = await Sql.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
         _serviceBusConnectionString = await ServiceBus.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
     }
