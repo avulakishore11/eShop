@@ -36,8 +36,17 @@ stages:
             inputs:
               command: test
               projects: 'tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj'
-              arguments: '--configuration $(buildConfiguration)'
+              arguments: '--configuration $(buildConfiguration) --report-xunit-trx --report-xunit-trx-filename catalog-tests.trx'
+              publishTestResults: false
             continueOnError: false
+
+          - task: PublishTestResults@2
+            displayName: 'Publish test results'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'VSTest'
+              testResultsFiles: '**/catalog-tests.trx'
+              searchFolder: 'tests/Catalog.FunctionalTests'
 
           - task: AzureCLI@2
             displayName: 'Build image from Dockerfile and push to ACR'
