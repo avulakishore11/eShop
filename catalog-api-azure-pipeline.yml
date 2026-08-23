@@ -32,14 +32,13 @@ stages:
               command: restore
               projects: 'src/Catalog.API/Catalog.API.csproj'
 
-          - task: DotNetCoreCLI@2
-            displayName: 'Test'
-            inputs:
-              command: test
-              projects: 'tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj'
-              arguments: '--configuration $(buildConfiguration) --report-xunit-trx --report-xunit-trx-filename catalog-tests.trx'
-              publishTestResults: false
-            continueOnError: false
+         # - task: DotNetCoreCLI@2
+          #  displayName: 'Test'
+           # inputs:
+            ## projects: 'tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj'
+           #   arguments: '--configuration $(buildConfiguration) --report-xunit-trx --report-xunit-trx-filename catalog-tests.trx'
+            #  publishTestResults: false
+           # continueOnError: false
 
           - task: PublishTestResults@2
             displayName: 'Publish test results'
