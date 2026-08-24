@@ -53,7 +53,12 @@ public partial class CatalogContextSeed(
 
             await context.CatalogItems.AddRangeAsync(catalogItems);
             logger.LogInformation("Seeded catalog with {NumItems} items", context.CatalogItems.Count());
+
+            // Seed data assigns explicit Ids (to match picture filenames), but the Id column
+            // is a SQL Server IDENTITY column — explicit inserts require IDENTITY_INSERT ON.
+            await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT [Catalog] ON");
             await context.SaveChangesAsync();
+            await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT [Catalog] OFF");
         }
     }
 
