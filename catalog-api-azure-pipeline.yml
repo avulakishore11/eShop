@@ -7,6 +7,7 @@ trigger:
       - src/Catalog.API/*
       - src/EventBus/*
       - src/EventBusServiceBus/*
+      - src/eShop.ServiceDefaults/*
       - tests/Catalog.FunctionalTests/*
       - catalog-api-azure-pipeline.yml
       - k8s/catalog-api-deployment.yaml
