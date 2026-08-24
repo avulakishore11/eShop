@@ -80,6 +80,5 @@ stages:
                     scriptLocation: inlineScript
                     inlineScript: |
                       az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing
-                      kubectl apply -f k8s/catalog-api-deployment.yaml
-                      kubectl set image deployment/catalog-api catalog-api=$(acrName).azurecr.io/$(imageName):$(Build.BuildId) -n catalog
+                      sed "s#$(acrName).azurecr.io/$(imageName):latest#$(acrName).azurecr.io/$(imageName):$(Build.BuildId)#" k8s/catalog-api-deployment.yaml | kubectl apply -f -
                       kubectl rollout status deployment/catalog-api -n catalog --timeout=120s

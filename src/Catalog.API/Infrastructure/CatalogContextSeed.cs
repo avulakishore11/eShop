@@ -56,9 +56,20 @@ public partial class CatalogContextSeed(
 
             // Seed data assigns explicit Ids (to match picture filenames), but the Id column
             // is a SQL Server IDENTITY column — explicit inserts require IDENTITY_INSERT ON.
-            await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT [Catalog] ON");
-            await context.SaveChangesAsync();
-            await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT [Catalog] OFF");
+            // SET IDENTITY_INSERT is scoped to the connection/session, so the raw SQL and
+            // SaveChangesAsync must share one explicitly-opened connection, or pooling will
+            // hand SaveChangesAsync a different connection where IDENTITY_INSERT was never set.
+            await context.Database.OpenConnectionAsync();
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT [Catalog] ON");
+                await context.SaveChangesAsync();
+                await context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT [Catalog] OFF");
+            }
+            finally
+            {
+                await context.Database.CloseConnectionAsync();
+            }
         }
     }
 
