@@ -57,6 +57,8 @@ spec:
               value: "svsbus-kaseyaeShop.servicebus.windows.net"
             - name: AZURE_CLIENT_ID
               value: "952f78ef-2dca-45c0-a368-9b521aa7e329"
+            - name: Identity__Url
+              value: "https://placeholder-identity-api-not-deployed-yet"  
           envFrom:
             - secretRef:
                 name: basket-redis-secret
