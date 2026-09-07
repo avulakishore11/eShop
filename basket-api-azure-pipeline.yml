@@ -80,7 +80,9 @@ stages:
                     azureSubscription: 'ado-to-azure-auth/authz'
                     scriptType: bash
                     scriptLocation: inlineScript
+                    # kubelogin is not installed which is required to connect to AAD enabled cluster.
                     inlineScript: |
+                      az aks install-cli 
                       az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing
                       sed "s#$(acrName).azurecr.io/$(imageName):latest#$(acrName).azurecr.io/$(imageName):$(Build.BuildId)#" k8s/basket-api-deployment.yml | kubectl apply -f -
                       kubectl rollout status deployment/basket-api -n basket-api --timeout=120s
