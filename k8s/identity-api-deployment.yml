@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: identity-api
+  labels:
+    name: identity-api
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: identity-api-sa
+  namespace: identity-api
+  annotations:
+    azure.workload.identity/client-id: "45ef34d0-8c70-4ec9-b548-08bf94e151a1"
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: identity-db-secret
+  namespace: identity-api
+type: Opaque
+stringData:
+  ConnectionStrings__identitydb : 
+        "Server=tcp:catalogsql-server.database.windows.net,1433;Initial Catalog=identityapisqldb;Persist Security Info=False;User ID=kishoreavula;Password=16Nf1a0101@.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-api
+  namespace: identity-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity-api
+  template:
+    metadata:
+      labels:
+        app: identity-api
+        azure.workload.identity/use: "true"
+
+  # The workload identity annotation above is required to enable the workload identity feature for this deployment. The value of the annotation must be set to "true" to indicate that the workload identity feature should be enabled for this deployment.
+  # Refereed the Service Account created in catalog-api-service-account.yaml file to use workload identity feature.      
+    spec:
+      serviceAccountName: identity-api-sa
+      containers:
+        - name: identity-api
+          image: acrkaseyaeshop.azurecr.io/identity-api:latest
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: AZURE_CLIENT_ID
+              value: "45ef34d0-8c70-4ec9-b548-08bf94e151a1"
+            - name: WebAppClient
+              value: "https://kaseyaeshop-fcfzgtf9g7c0degf.centralus-01.azurewebsites.net"
+            - name: BasketApiClient
+              value: "http://172.168.151.76"
+            - name: OrderingApiClient
+              value: "https://placeholder-ordering-api-not-deployed-yet"
+            - name: WebhooksApiClient
+              value: "https://placeholder-webhooks-api-not-deployed-yet"
+            - name: WebhooksWebClient
+              value: "https://placeholder-webhooks-web-not-deployed-yet"
+          envFrom:
+            - secretRef:
+                name: identity-db-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-api
+  namespace: identity-api
+  annotations:
+    # Gives this LoadBalancer a private IP from the AKS subnet only — no public IP at all.
+    # Required so APIM's outbound VNet integration can route to it; a ClusterIP is only
+    # reachable inside the AKS pod network, not from other subnets in the same VNet.
+    #service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: identity-api
+  ports:
+    - port: 80
+      targetPort: 8080

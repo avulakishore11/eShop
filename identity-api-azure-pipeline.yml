@@ -1,0 +1,86 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/Identity.API/*
+      - src/EventBus/*
+      - src/EventBusServiceBus/*
+      - src/eShop.ServiceDefaults/*
+      - tests/Identity.FunctionalTests/*
+      - identity-api-azure-pipeline.yml
+      - k8s/identity-api-deployment.yml
+      - Directory.Packages.props
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  acrName: 'acrkaseyaeshop'
+  imageName: 'identity-api'
+  aksResourceGroup: 'rg-kaseya'
+  aksClusterName: 'kaseyaeShop-backend'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndPush
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore'
+            inputs:
+              command: restore
+              projects: 'src/Identity.API/Identity.API.csproj'
+
+         # - task: DotNetCoreCLI@2
+          #  displayName: 'Test'
+           # inputs:
+            ## projects: 'tests/Identity.FunctionalTests/Identity.FunctionalTests.csproj'
+           #   arguments: '--configuration $(buildConfiguration) --report-xunit-trx --report-xunit-trx-filename catalog-tests.trx'
+            #  publishTestResults: false
+           # continueOnError: false
+
+         # - task: PublishTestResults@2
+          #  displayName: 'Publish test results'
+           # condition: succeededOrFailed()
+            #inputs:
+             # testResultsFormat: 'VSTest'
+              #testResultsFiles: '**/catalog-tests.trx'
+             # searchFolder: 'tests/Catalog.FunctionalTests'
+
+          - task: AzureCLI@2
+            displayName: 'Build image from Dockerfile and push to ACR'
+            inputs:
+              azureSubscription: 'ado-to-azure-auth/authz'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az acr build \
+                  --registry $(acrName) \
+                  --image $(imageName):$(Build.BuildId) \
+                  --file src/Identity.API/Dockerfile \
+                  .
+
+  - stage: DeployToDev
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployIdentityApi
+        environment: 'eshop-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  displayName: 'Deploy to AKS'
+                  inputs:
+                    azureSubscription: 'ado-to-azure-auth/authz'
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az aks install-cli
+                      az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksClusterName) --overwrite-existing --admin
+                      sed "s#$(acrName).azurecr.io/$(imageName):latest#$(acrName).azurecr.io/$(imageName):$(Build.BuildId)#" k8s/identity-api-deployment.yml | kubectl apply -f -
+                      kubectl rollout status deployment/identity-api -n identity-api --timeout=120s
