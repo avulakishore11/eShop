@@ -1,6 +1,10 @@
 ﻿using eShop.WebApp.Components;
 using eShop.ServiceDefaults;
 
+// Basket.API's gRPC endpoint is served over plain HTTP (no TLS) in this environment.
+// .NET's HttpClient refuses HTTP/2 without TLS unless this is explicitly enabled.
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
