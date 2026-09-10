@@ -62,14 +62,15 @@ spec:
           envFrom:
             - secretRef:
                 name: basket-redis-secret
+          # Basket.API serves HTTP/2-only (gRPC) on plain HTTP, so an httpGet probe
+          # (which uses HTTP/1.1) can't reach /health. A tcpSocket probe just checks
+          # the port is listening, which is protocol-agnostic.
           readinessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 8080
             initialDelaySeconds: 10
           livenessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 8080
             initialDelaySeconds: 20
 ---
