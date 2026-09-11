@@ -58,7 +58,7 @@ spec:
             - name: AZURE_CLIENT_ID
               value: "952f78ef-2dca-45c0-a368-9b521aa7e329"
             - name: Identity__Url
-              value: "https://placeholder-identity-api-not-deployed-yet"  
+              value: "http://20.109.225.68"  
           envFrom:
             - secretRef:
                 name: basket-redis-secret
